@@ -26,6 +26,18 @@ app.post('/todos', (req, res) => {
   });
 });
 
+// GET /todos - List all todos
+app.get('/todos', (req, res) => {
+  // Fetch all todos from db
+  Todo.find().then((todos) => {
+    // Send all todos as response
+    res.send({todos}); 
+  }, (e) => {
+    // Error handler - 400 status - bad request
+    res.status(400).send(e);
+  });
+});
+
 app.listen(3000, () => {
   console.log('App up on port 3000');
 });
