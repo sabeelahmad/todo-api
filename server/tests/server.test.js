@@ -7,8 +7,21 @@ const {Todo} = require('../models/todo');
 // setting up db before any tests are run
 // this runs before each test
 // emptying the db before testing
+
+// seeding db
+const todos = [{
+  text: 'Test 1'
+}, {
+  text: 'Test 2'
+}];
+
 beforeEach((done) => {
-  Todo.remove().then(() => done());
+  Todo.remove().then(() => {
+    return Todo.insertMany(todos);
+  }).then(() => {
+    // Promise handler for insertMany method
+    done();
+  });
 });
 
 // Test block for POST /todos
@@ -36,7 +49,7 @@ describe('POST /todos', () => {
       }
       // if no errors check if todo has been inserted into Todos collection
       // inside mongodb
-      Todo.find().then((todos) => {
+      Todo.find({text}).then((todos) => {
         // assertions about the todos fetched from db
         expect(todos.length).toBe(1);
         expect(todos[0].text).toBe(text);
@@ -56,9 +69,23 @@ describe('POST /todos', () => {
       // assertions about db
       // no todo should be created
       Todo.find().then((todos) => {
-        expect(todos.length).toBe(0);
+        expect(todos.length).toBe(2);
         done();
       }).catch((e) => done(e));
     })
+  });
+});
+
+// Test block for GET /todos
+describe('GET /todos', () => {
+  it('should list all todos', (done) => {
+    request(app)
+    .get('/todos')
+    .expect(200)
+    // expect response to be 2 todos
+    .expect((res) => {
+      expect(res.body.todos.length).toBe(2);
+    })
+    .end(done);
   });
 });
