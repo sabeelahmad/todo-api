@@ -7,6 +7,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
+var port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -62,8 +63,31 @@ app.get('/todos/:id', (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log('App up on port 3000');
+// DELETE todos/:id - Delete a todo
+app.delete('/todos/:id', (req, res) => {
+  var id = req.params.id;
+
+  // Validating ID
+  if(!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  // If ID valid query db
+  Todo.findByIdAndRemove(id).then((todo) => {
+    // If id valid but not in db
+    if(!todo) {
+      return res.status(404).send();
+    }
+    // if id valid and in db
+    res.status(200).send({todo});
+  }, (e) => {
+    // if bad request
+    res.status(400).send();
+  });
+});
+
+app.listen(port, () => {
+  console.log('App up on port ' + port);
 });
 
 module.exports.app = app;
