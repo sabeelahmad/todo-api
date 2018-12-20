@@ -8,7 +8,6 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
-const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -120,8 +119,30 @@ app.patch('/todos/:id', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log('App up on port ' + port);
+// POST /users
+app.post('/users', (req, res) => {
+  // Retrieving required fields from post request
+  var body = _.pick(req.body, ['email', 'password']);
+  // Creating new user
+  var user = new User({
+    email: body.email,
+    password: body.password
+  });
+  // Saving to db
+  user.save().then(() => {
+    // Here we call method to gen token
+    // this returns a promise/value which we can chain
+    return user.generateAuthToken();
+  }).then((token) => {
+    // We use the token created to set the http response header for the user
+    res.header('x-auth',token).send(user);
+  }).catch((e) => {
+    res.status(400).send(e);
+  });
+});
+
+app.listen(3000, () => {
+  console.log('App up on port ' + 3000);
 });
 
 module.exports.app = app;
