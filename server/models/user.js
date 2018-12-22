@@ -52,6 +52,18 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+UserSchema.methods.removeToken = function (token) {
+  var user = this;
+
+  return user.update({
+    // Using mongodb native driver $pull method to remove
+    // data from an array
+    $pull: {
+      tokens: {token}
+    }
+  });
+}
+
 // Model methods
 UserSchema.statics.findByToken = function (token) {
   // This function verifies token of the user and authenticates

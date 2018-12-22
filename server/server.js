@@ -158,6 +158,14 @@ app.post('/users/login', (req, res) => {
   });
 });
 
+// Logout route - delete token - authentication necessary to do this
+app.delete('/users/me/token', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }, (e) => {
+    res.status(400).send();
+  });
+});
 
 // Private route
 app.get('/users/me', authenticate, (req, res) => {
