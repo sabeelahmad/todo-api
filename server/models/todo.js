@@ -16,6 +16,11 @@ var Todo = mongoose.model('Todo', {
     type: Number,
     default: null
   }
+  // Associating a todo with a user
+  _creator: {
+    type: mongoose.Schema.Types.ObjectId, // The id of the user
+    required: true // No todo can be created without authentication first
+  }
 });
 
 module.exports.Todo = Todo;

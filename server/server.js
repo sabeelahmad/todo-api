@@ -13,10 +13,11 @@ var app = express();
 app.use(bodyParser.json());
 
 // POST route for todos
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
   // Storing the todo to mongodb
   var todo = new Todo({
     text: req.body.text // text that comes from the post request to url
+    _creator: req.user._id; // creator = user that is authenticated and trying to create a todo
   });
 
   // save the todo to the model - it returns a promise
@@ -29,10 +30,10 @@ app.post('/todos', (req, res) => {
   });
 });
 
-// GET /todos - List all todos
-app.get('/todos', (req, res) => {
+// GET /todos - List all todos that the currently authenticated user has created
+app.get('/todos', authenticate, (req, res) => {
   // Fetch all todos from db
-  Todo.find().then((todos) => {
+  Todo.find({_creator: req.user._id}).then((todos) => {
     // Send all todos as response
     res.send({todos});
   }, (e) => {
@@ -42,7 +43,7 @@ app.get('/todos', (req, res) => {
 });
 
 // GET /todos/:id - Get a particular todo
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   // Validating ID
@@ -51,7 +52,10 @@ app.get('/todos/:id', (req, res) => {
   }
 
   // Querying DB
-  Todo.findById(id).then((todo) => {
+  Todo.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then((todo) => {
     // Case - Valid ID, but not found in db
     if(!todo) {
       return res.status(404).send();
@@ -65,7 +69,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // DELETE todos/:id - Delete a todo
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   // Validating ID
@@ -74,7 +78,10 @@ app.delete('/todos/:id', (req, res) => {
   }
 
   // If ID valid query db
-  Todo.findByIdAndRemove(id).then((todo) => {
+  Todo.findOneAndRemove({
+    _id: id,
+    _creator: req.user._id
+  }).then((todo) => {
     // If id valid but not in db
     if(!todo) {
       return res.status(404).send();
@@ -89,7 +96,7 @@ app.delete('/todos/:id', (req, res) => {
 
 // UPDATE todo route
 // PATCH /todos/:id
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
   // Using lodash's pick method to select properties that have been updated
   var body = _.pick(req.body, ['text', 'completed']);
@@ -106,7 +113,10 @@ app.patch('/todos/:id', (req, res) => {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id, {
+  Todo.findOneAndUpdate({
+    _id: id,
+    _creator: req.user._id
+  }, {
     $set: body
   }, {
     new: true
