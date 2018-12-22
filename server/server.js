@@ -142,6 +142,21 @@ app.post('/users', (req, res) => {
   });
 });
 
+// POST /users/login - Login a user dedicated route
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email, body.password).then((user) => {
+    // Check for user existing taken care by Model Method
+    // User found then generate auth token
+    return user.generateAuthToken().then((token) => {
+      // respond with token
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
 
 
 // Private route
